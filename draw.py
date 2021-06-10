@@ -10,10 +10,13 @@ Author: Eric Jang
 """
 
 import tensorflow as tf
-from tensorflow.examples.tutorials import mnist
+# from tensorflow.examples.tutorials import mnist
 import numpy as np
 import os
 
+from loader import get_mnist_loader
+
+# python draw.py --read_attn=True --write_attn=True
 tf.flags.DEFINE_string("data_dir", "", "")
 tf.flags.DEFINE_boolean("read_attn", True, "enable attention for reader")
 tf.flags.DEFINE_boolean("write_attn",True, "enable attention for writer")
@@ -208,7 +211,9 @@ train_op=optimizer.apply_gradients(grads)
 data_directory = os.path.join(FLAGS.data_dir, "mnist")
 if not os.path.exists(data_directory):
 	os.makedirs(data_directory)
-train_data = mnist.input_data.read_data_sets(data_directory, one_hot=True).train # binarized (0-1) mnist data
+
+train_data = get_mnist_loader(data_directory)
+# train_data = mnist.input_data.read_data_sets(data_directory, one_hot=True).train # binarized (0-1) mnist data
 
 fetches=[]
 fetches.extend([Lx,Lz,train_op])
@@ -222,7 +227,7 @@ tf.global_variables_initializer().run()
 #saver.restore(sess, "/tmp/draw/drawmodel.ckpt") # to restore from model, uncomment this line
 
 for i in range(train_iters):
-	xtrain,_=train_data.next_batch(batch_size) # xtrain is (batch_size x img_size)
+	xtrain,_= train_data.next_batch(batch_size) # xtrain is (batch_size x img_size)
 	feed_dict={x:xtrain}
 	results=sess.run(fetches,feed_dict)
 	Lxs[i],Lzs[i],_=results
